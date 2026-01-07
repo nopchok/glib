@@ -173,6 +173,10 @@ class AsianPnL:
     @staticmethod
     def calc_pnl(df, signal='home'):
         assert signal in ['home', 'away', 'over', 'under'], 'Signal must be home, away, over, under'
+        
+        required = ['ghf', 'gaf', 'gh', 'ga', 'handicap', 'oddh', 'odda', 'goalline', 'oddo', 'oddu']
+        # check column
+        assert all(col in df.columns for col in required), f"DF must contain columns {required}"
 
         out = df.copy()
         out['pnl'] = out.apply(lambda r: AsianPnL.__calc_row_pnl__(r, signal), axis=1)
