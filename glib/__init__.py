@@ -1,12 +1,5 @@
 name = 'glib'
 
-import numpy as np
-import pandas as pd
-
-import ta
-import pandas_ta
-import requests
-
 class Indicators:
     @staticmethod
     def addAllTechnicalIndicators(df):
