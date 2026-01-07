@@ -128,3 +128,61 @@ class Backtest:
 
         return df_trade
         
+class AsianPnL:
+    """
+    Supported mode: home, away, over, under
+    Single Asian logic
+    """
+
+    # ---------- Core Logic ----------
+    @staticmethod
+    def __asian_result__(value, line, odd):
+        base = value - line
+
+        win = odd - 1
+        win2 = win / 2
+
+        if base > 0.25:
+            return win
+        elif base == 0.25:
+            return win2
+        elif base == -0.25:
+            return -0.5
+        elif base < -0.25:
+            return -1
+        
+        return 0
+
+    # ---------- Row Level ----------
+    @staticmethod
+    def __calc_row_pnl__(row, signal='home'):
+        ghf, gaf = row['ghf'], row['gaf']
+        totalf = ghf + gaf
+
+        gh, ga = row['gh'], row['ga']
+
+        if signal == 'over':
+            v, l, o = totalf, row['goalline'], row['oddo']
+
+        elif signal == 'under':
+            v, l, o = -totalf, -row['goalline'], row['oddu']
+
+        elif signal == 'home':
+            v, l, o = (ghf - gh) - (gaf - ga), -row['handicap'], row['oddh']
+
+        else:  # away
+            v, l, o = (gaf - ga) - (ghf - gh), row['handicap'], row['odda']
+
+        return AsianPnL.__asian_result__(v, l, o)
+
+
+    # ---------- DataFrame API ----------
+    @staticmethod
+    def calc_pnl(df, signal='home'):
+        assert signal in ['home', 'away', 'over', 'under'], 'Signal must be home, away, over, under'
+
+        out = df.copy()
+        out['pnl'] = out.apply(lambda r: AsianPnL.__calc_row_pnl__(r, signal), axis=1)
+        out['cum_pnl'] = out['pnl'].cumsum()
+        return out
+        
